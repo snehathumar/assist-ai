@@ -18,7 +18,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-// High Impact Security & Efficiency Middleware
+// Trust proxy for reverse proxy environments (Google Cloud Run / AI Studio dev server)
+app.set("trust proxy", 1);
 
 // High Impact Security & Efficiency Middleware
 app.use(helmet({
@@ -35,7 +36,6 @@ app.use(mongoSanitize()); // Prevent NoSQL Injection
 app.use(xss()); // Prevent Cross-Site Scripting (XSS) payload injection
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
-
 // Rate Limiting to prevent DDoS and API Abuse
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -43,6 +43,11 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests from this IP, please try again after 15 minutes" },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: {
+    xForwardedForHeader: false,
+    forwardedHeader: false,
+    trustProxy: false,
+  },
 });
 app.use("/api/", apiLimiter);
 
